@@ -1,0 +1,162 @@
+#%RAML 1.0
+title: Weather API
+version: v1
+baseUri: https://api.weatherapp.com/{version}
+mediaType: application/json
+protocols: [ HTTPS ]
+
+types:
+  Location:
+    type: object
+    properties:
+      city: string
+      country: string
+      latitude?: number
+      longitude?: number
+  Weather:
+    type: object
+    properties:
+      temperature: number
+      humidity: number
+      windSpeed: number
+      condition: string
+      sunrise: datetime
+      sunset: datetime
+  Forecast:
+    type: object
+    properties:
+      date: datetime
+      highTemperature: number
+      lowTemperature: number
+      condition: string
+
+/locations:
+  get:
+    description: Retrieve a list of available locations.
+    responses:
+      200:
+        body:
+          application/json:
+            type: Location[]
+      400:
+        description: Bad request.
+  post:
+    description: Add a new location to the system.
+    body:
+      application/json:
+        type: Location
+    responses:
+      201:
+        description: Location added successfully.
+      400:
+        description: Bad request.
+      409:
+        description: Location already exists.
+  /{locationId}:
+    uriParameters:
+      locationId:
+        description: Unique identifier for the location.
+        type: string
+    get:
+      description: Retrieve information about a specific location.
+      responses:
+        200:
+          body:
+            application/json:
+              type: Location
+        404:
+          description: Location not found.
+    delete:
+      description: Remove a location by its ID.
+      responses:
+        204:
+          description: Location deleted successfully.
+        404:
+          description: Location not found.
+
+/weather:
+  get:
+    description: Retrieve current weather information for a specific location.
+    queryParameters:
+      city:
+        description: City name for which to fetch weather data.
+        type: string
+        required: true
+      country:
+        description: Country name for the specified city.
+        type: string
+      units:
+        description: Units of measurement (metric or imperial).
+        type: string
+        enum: [ metric, imperial ]
+        default: metric
+    responses:
+      200:
+        body:
+          application/json:
+            type: Weather
+      400:
+        description: Bad request.
+      404:
+        description: Weather data not found.
+
+/forecast:
+  get:
+    description: Retrieve weather forecast for a specific location.
+    queryParameters:
+      city:
+        description: City name for which to fetch the forecast.
+        type: string
+        required: true
+      country:
+        description: Country name for the specified city.
+        type: string
+      days:
+        description: Number of days for the forecast (1-7).
+        type: integer
+        minimum: 1
+        maximum: 7
+        default: 5
+      units:
+        description: Units of measurement (metric or imperial).
+        type: string
+        enum: [ metric, imperial ]
+        default: metric
+    responses:
+      200:
+        body:
+          application/json:
+            type: Forecast[]
+      400:
+        description: Bad request.
+      404:
+        description: Forecast data not found.
+
+/alerts:
+  get:
+    description: Retrieve weather alerts for a specific location.
+    queryParameters:
+      city:
+        description: City name for which to fetch alerts.
+        type: string
+        required: true
+      country:
+        description: Country name for the specified city.
+        type: string
+    responses:
+      200:
+        body:
+          application/json:
+            type: array
+            items:
+              type: object
+              properties:
+                alertType: string
+                description: string
+                severity: string
+                issuedAt: datetime
+                expiresAt: datetime
+      400:
+        description: Bad request.
+      404:
+        description: No alerts found.
